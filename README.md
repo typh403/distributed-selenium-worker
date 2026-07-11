@@ -75,4 +75,4 @@ Use this only on systems and accounts you own or are authorized to test, and fol
 
 ## Development Notes
 
-Architecture and design decisions are mine. `[Adjust to the truth: describe exactly how much of worker.py and this README was AI-assisted.]`
+Architecture and design decisions are mine. `[I designed the system: the isolated worker-node concept, the per-node configuration and profile layout, and the overall architecture. The code itself was produced with AI assistance. I used AI as an active tool in two steps: first to write the basic code blocks, then to shape and combine those blocks according to the architecture I had defined. I made the design decisions and directed the process; the AI generated the implementation under that direction. This project was built early in my Python learning (about 4 months of self-taught experience), and I am continuing to study the code line by line to fully understand it.]`
