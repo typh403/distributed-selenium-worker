@@ -1,28 +1,78 @@
-# Distributed Selenium Automation Framework
+# Isolated Selenium Worker Node (Template)
 
-A scalable, multi-instance automation framework built with Python and Selenium. This project is designed to run numerous isolated browser instances concurrently, each functioning as a separate "worker node" with its own proxy, session data, and digital footprint.
+A Python/Selenium worker template designed to run as many **independent, isolated browser instances**, each with its own proxy, Chrome profile and config. Every node is a self-contained folder (or compiled `.exe`), so isolation is achieved at the **process/directory level** rather than inside a single codebase.
 
-## Architecture
+> **Status:** working skeleton / template. The isolation and configuration layer is implemented. The actual task logic is intentionally left as a placeholder (see [Limitations](#known-limitations)).
 
-This system was engineered for **horizontal scaling and fingerprint isolation**. 
-By compiling the core `worker.py` into an executable and deploying it across numbered sub-directories (e.g., Nodes 1 through 40), the system ensures strict isolation:
-- **Session Isolation:** Each worker maintains its own local `profile` directory, ensuring cookies, cache, and local storage do not leak between instances.
-- **Network Isolation:** Each node reads from its localized `config.json` to route traffic through independent proxies.
-- **Executable Agnostic:** The code dynamically detects if it is running as a frozen executable (`sys.frozen`) or a Python script, dynamically adjusting its base path for configuration loading.
+- Developed: `[07/11/26]`
+- Published on GitHub: `[09/28/26]`
 
-## Use Cases
-- Distributed Web Scraping
-- Load Testing
-- Multi-Account Session Management
-- Geo-Restricted Data Fetching via Proxy Rotation
+## Design Idea
 
-## Setup & Deployment
+Instead of one program juggling many sessions, the same small worker is copied into numbered folders (`worker_01/`, `worker_02/`, ... up to any number of nodes). Each copy is fully independent:
 
-1. **Configure the Node:**
-   Rename `config.example.json` to `config.json` and input the proxy/credential details for the specific node.
+| Concern | How it is isolated |
+|---|---|
+| Session data | Each node creates its own local `profile/` directory (cookies, cache, local storage never mix) |
+| Network | Each node reads its own `config.json` and routes traffic through its own proxy |
+| Logging | Each node writes to its own `logs.txt` |
+| Deployment | `worker.py` detects if it is a frozen executable (`sys.frozen`) or a plain script and resolves its base path accordingly, so the same code works as `.py` or compiled `.exe` |
 
-2. **Isolate:**
-   Place the script and the `config.json` in an isolated directory (e.g., `worker_01/`).
+This is a "process-per-worker" pattern: no shared state, so nodes cannot interfere with each other and the number of workers scales by adding folders.
 
-3. **Run:**
-   Execute `python worker.py` (or the compiled `.exe`). The script will automatically generate a `profile` directory and log all activities to `logs.txt` within that node's folder.
+## What It Does Today
+
+1. Loads `config.json` from the node's own directory.
+2. Logs the node's task name, proxy and username to console and `logs.txt`.
+3. Launches Chrome with the node's proxy and a dedicated `--user-data-dir`.
+4. Opens an IP-check page so you can verify the proxy is applied.
+5. **Waits for manual input** (`input()`), keeping the browser open for you to interact with it.
+
+Because of step 5 the project is **semi-automated**: the framework brings up isolated, correctly configured browser sessions; what you do inside them is up to you (or your own automation code).
+
+## Configuration
+
+Copy `config.example.json` to `config.json` in the node's folder:
+
+| Field | Used? | Description |
+|---|---|---|
+| `channel_name` | Logged | Label for the node/task |
+| `proxy` | Yes | `host:port` proxy for this node |
+| `username` | Logged only | Not yet wired to any authentication logic |
+
+## Setup
+
+```bash
+pip install selenium
+```
+
+1. Create a folder for the node, e.g. `worker_01/`.
+2. Put `worker.py` and `config.json` inside it.
+3. Run `python worker.py` (or the compiled `.exe`).
+
+A `profile/` folder and `logs.txt` are created automatically next to the script. Repeat with a new folder for each additional node.
+
+## Known Limitations
+
+- **No task logic:** the automation step is a placeholder; the script only opens an IP-check page and waits.
+- **Blocking `input()`:** each node waits for a keypress, so nodes cannot yet run unattended or be terminated programmatically.
+- **Proxy authentication:** only `host:port` proxies are supported. Chrome does not accept credentials through `--proxy-server`, and the `username` field is currently not used.
+- **Minimal anti-detection:** a single Chrome flag (`--disable-blink-features=AutomationControlled`) is set. This is not a complete fingerprint-isolation solution.
+- **No orchestration layer:** nodes are started individually; there is no launcher that spawns or monitors many nodes.
+- **Procedural code:** a single `main()` function, no class structure yet.
+
+## Roadmap
+
+- [ ] Refactor into classes (`NodeConfig`, `BrowserSession`, `Worker`)
+- [ ] Pluggable task modules so each node can run a different job
+- [ ] Headless mode and clean programmatic shutdown (remove `input()`)
+- [ ] Authenticated proxy support
+- [ ] Simple launcher to start/monitor multiple nodes
+
+## Responsible Use
+
+Use this only on systems and accounts you own or are authorized to test, and follow the terms of service of any site you access.
+
+## Development Notes
+
+Architecture and design decisions are mine. `[Adjust to the truth: describe exactly how much of worker.py and this README was AI-assisted.]`
