@@ -1,0 +1,6 @@
+{
+    "channel_name": "target_task_01",
+    "proxy": "192.168.1.1:8080",
+    "username": "example_user",
+    "password": "example_password"
+}
